@@ -32,7 +32,7 @@ pipeline {
                                     usernameVariable: 'DOCKER_USER')]) {
 
                         // 1. LOGIN: Jenkins "speaks" to Docker Hub
-                        sh "docker login -u ${DOCKER_USER} -p ${DOCKER_PWD}"
+                        sh "echo ${DOCKER_PWD} | docker login -u ${DOCKER_USER} --password-stdin"
 
                         // 2. BUILD: Tags image with your username
                         sh "docker build -t ${DOCKER_USER}/ems-backend:jenkins-latest ."
