@@ -2,47 +2,58 @@ pipeline {
     agent any
 
     tools {
-        // These names MUST match what you set in 'Global Tool Configuration'
+        // Must match names in Manage Jenkins -> Tools
         maven 'Maven 3.x'
         jdk 'Java 17'
+        dockerTool 'docker-tool'
     }
 
     stages {
         stage('Checkout') {
             steps {
-                // This pulls the code from the Git repo you configured in the job
                 checkout scm
             }
         }
 
         stage('Build & Test') {
             steps {
-                // We use 'sh' because our Jenkins container is running Linux
+                // Creates your ems-backend-0.0.1-SNAPSHOT.jar
                 sh 'mvn clean package'
             }
         }
 
-        stage('Build Docker Image') {
+        stage('Docker Build & Push') {
             steps {
                 script {
-                    // This builds the image locally on your machine via the Docker socket
-                    // Replace 'ajith' with your Docker Hub username
-                    sh "docker build -t ajith151020/ems-backend:jenkins-latest ."
+                    // This block securely handles your Docker Hub login
+                    // 'docker-hub-creds' is the ID you set in Jenkins Credentials
+                    withCredentials([usernamePassword(credentialsId: 'docker-hub-creds',
+                                    passwordVariable: 'DOCKER_PWD',
+                                    usernameVariable: 'DOCKER_USER')]) {
+
+                        // 1. LOGIN: Jenkins "speaks" to Docker Hub
+                        sh "echo \$DOCKER_PWD | docker login -u \$DOCKER_USER --password-stdin"
+
+                        // 2. BUILD: Tags image with your username
+                        sh "docker build -t \$DOCKER_USER/ems-backend:jenkins-latest ."
+
+                        // 3. PUSH: Uploads it to the cloud
+                        sh "docker push \$DOCKER_USER/ems-backend:jenkins-latest"
+
+                        // 4. LOGOUT: Good security practice
+                        sh "docker logout"
+                    }
                 }
             }
         }
     }
 
     post {
-        always {
-            // Clean up the workspace after the build to save disk space
-            cleanWs()
-        }
         success {
-            echo 'Build, Test, and Docker packaging were successful!'
+            echo "Successfully pushed to: https://hub.docker.com/r/YOUR_USERNAME/ems-backend"
         }
         failure {
-            echo 'The pipeline failed. Check the console output above.'
+            echo "Build failed. Check 'Console Output' for errors."
         }
     }
 }
