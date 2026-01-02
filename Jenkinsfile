@@ -51,7 +51,7 @@ pipeline {
 
                     // 2. Run the new container
                     // -d: detached mode, -p: port mapping, --name: easy to find later
-                    sh "docker run -d -p 8080:8080 --name ems-app ${DOCKER_USER}/ems-backend:jenkins-latest"
+                    sh "docker run -d -p 8081:8080 --name ems-app ${DOCKER_USER}/ems-backend:jenkins-latest"
                 }
             }
         }
