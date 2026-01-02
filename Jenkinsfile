@@ -32,16 +32,13 @@ pipeline {
                                     usernameVariable: 'DOCKER_USER')]) {
 
                         // 1. LOGIN: Jenkins "speaks" to Docker Hub
-                        sh "echo \$DOCKER_PWD | docker login -u \$DOCKER_USER --password-stdin"
+                        sh "docker login -u ${DOCKER_USER} -p ${DOCKER_PWD}"
 
                         // 2. BUILD: Tags image with your username
-                        sh "docker build -t \$DOCKER_USER/ems-backend:jenkins-latest ."
+                        sh "docker build -t ${DOCKER_USER}/ems-backend:jenkins-latest ."
 
                         // 3. PUSH: Uploads it to the cloud
-                        sh "docker push \$DOCKER_USER/ems-backend:jenkins-latest"
-
-                        // 4. LOGOUT: Good security practice
-                        sh "docker logout"
+                        sh "docker push ${DOCKER_USER}/ems-backend:jenkins-latest"
                     }
                 }
             }
@@ -50,7 +47,7 @@ pipeline {
 
     post {
         success {
-            echo "Successfully pushed to: https://hub.docker.com/r/YOUR_USERNAME/ems-backend"
+            echo "Successfully pushed to dockerhub"
         }
         failure {
             echo "Build failed. Check 'Console Output' for errors."
