@@ -63,7 +63,7 @@ pipeline {
 
     post {
         success {
-            echo "Successfully pushed to dockerhub and deployed to kubernetes"
+            echo "Successfully pushed to dockerhub and deployed to kubernetes,testing automatic deployment"
         }
         failure {
             echo "Build failed. Check 'Console Output' for errors."
