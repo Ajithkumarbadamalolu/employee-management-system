@@ -45,13 +45,16 @@ pipeline {
         }
         stage('Deploy to K8s') {
             steps {
-                withCredentials([file(credentialsId: 'kubeconfig', variable: 'KUBECONFIG')]) {
+                // This is the official plugin wrapper from the documentation
+                withKubeConfig([credentialsId: 'kubeconfig']) {
                     script {
-                        // 1. Ensure the Deployment and Service exist
-                        sh 'kubectl apply -f deployment.yaml'
+                        // Fulfilling the plugin prerequisite: Ensuring the tool is present
+                        sh 'curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"'
+                        sh 'chmod +x ./kubectl'
 
-                        // 2. Force the update to pick up the new "jenkins-latest" image
-                        sh 'kubectl rollout restart deployment/ems-backend'
+                        // Using the tool within the environment configured by the plugin
+                        sh './kubectl apply -f deployment.yaml'
+                        sh './kubectl rollout restart deployment/ems-backend'
                     }
                 }
             }
