@@ -45,12 +45,14 @@ pipeline {
         }
         stage('Deploy to K8s') {
             steps {
-                script {
-                    // 1. Ensure the Deployment and Service exist
-                    sh 'kubectl apply -f deployment.yaml'
+                withCredentials([file(credentialsId: 'kubeconfig', variable: 'KUBECONFIG')]) {
+                    script {
+                        // 1. Ensure the Deployment and Service exist
+                        sh 'kubectl apply -f deployment.yaml'
 
-                    // 2. Force the update to pick up the new "jenkins-latest" image
-                    sh 'kubectl rollout restart deployment/ems-backend'
+                        // 2. Force the update to pick up the new "jenkins-latest" image
+                        sh 'kubectl rollout restart deployment/ems-backend'
+                    }
                 }
             }
         }
