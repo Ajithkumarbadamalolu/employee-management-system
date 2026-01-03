@@ -39,14 +39,18 @@ pipeline {
 
                         // 3. PUSH: Uploads it to the cloud
                         sh "docker push ${DOCKER_USER}/ems-backend:jenkins-latest"
-
-                        // 4. Pull the latest image we just pushed
-                        sh "docker pull ${DOCKER_USER}/ems-backend:jenkins-latest"
-
-                        // 5. Run the new container
-                        // -d: detached mode, -p: port mapping, --name: easy to find later
-                        sh "docker run -d -p 8081:8080 --name ems-app ${DOCKER_USER}/ems-backend:jenkins-latest"
                     }
+                }
+            }
+        }
+        stage('Deploy to K8s') {
+            steps {
+                script {
+                    // 1. Ensure the Deployment and Service exist
+                    sh 'kubectl apply -f deployment.yaml'
+
+                    // 2. Force the update to pick up the new "jenkins-latest" image
+                    sh 'kubectl rollout restart deployment/ems-backend'
                 }
             }
         }
@@ -54,7 +58,7 @@ pipeline {
 
     post {
         success {
-            echo "Successfully pushed to dockerhub"
+            echo "Successfully pushed to dockerhub and deployed to kubernetes"
         }
         failure {
             echo "Build failed. Check 'Console Output' for errors."
